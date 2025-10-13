@@ -1,20 +1,29 @@
-// src/index.js
 require('dotenv').config();
 const express = require('express');
-const morgan = require('morgan');
-const cors = require('cors');
-const helmet = require('helmet');
+    const morgan = require('morgan');
+    const cors = require('cors');
+    const helmet = require('helmet');
 
 const app = express();
-app.use(cors());
-app.use(helmet());
-app.use(express.json());
-app.use(morgan('dev'));
+    app.use(cors());
+    app.use(helmet());
+    app.use(morgan('dev'));
+    app.use(express.json());
+    
+/*------------------CATEGORIA------------------ 
+const pool = require('./config/db');
+const categoriaController = require('./controllers/categoriaController');
+categoriaController.init(pool);
+---------------------------------------------*/
 
-// rotas base (route index exportado no commit 1)
-app.use('/api', require('./routes'));
-
-app.get('/health', (req, res) => res.json({ status: 'ok' }));
-
+// Importa e registra as rotas
+require('./routes')(app);
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+app.listen(PORT, (erro) => {
+    if (erro) {
+        console.error('Erro ao iniciar o servidor:', erro);
+        return;
+    }
+    console.log(`Server running on http://localhost:${PORT}`);
+});
+

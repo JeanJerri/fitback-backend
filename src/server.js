@@ -14,7 +14,7 @@ app.use('/api', routes);
 
 // Rota de teste
 app.get('/', (req, res) => {
-  res.send('Backend está rodando 🚀');
+  res.send('Backend está rodando!');
 });
 
 // Inicializa servidor
