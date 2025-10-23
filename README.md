@@ -38,9 +38,19 @@ fitback-backend/
    ```env
    DB_HOST=localhost
    DB_USER=root
-   DB_PASS=suasenha
+   DB_PASSWORD=suasenha
    DB_NAME=fitback
    DB_PORT=3306
+   ```
+
+Ou use um servidor online como a Digital Ocean:
+
+   ```
+   username = seu_usuario
+   password = sua_senha
+   host = seu_host
+   port = sua_porta
+   database = nome_do_seu_BD
    ```
 
 3. Crie o banco de dados e tabela de teste no MySQL:

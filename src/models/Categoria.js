@@ -3,7 +3,7 @@ const conexao = require('../config/db')
 class CategoriaModel {
 
   async listar() {
-    const sql = "SELECT * FROM categorias";
+    const sql = "SELECT * FROM categoria";
     try {
       const [rows] = await conexao.query(sql);
       console.log("Consultas buscadas com sucesso");

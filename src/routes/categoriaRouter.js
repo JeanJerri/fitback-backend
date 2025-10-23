@@ -1,11 +1,9 @@
 const{Router} = require("express");
-//const Router = require('express').Router(); mema coisa
 
 const router = Router();
 
 const categoriaController = require("../controllers/categoriaController");
 
-// Verbos HTTP
 router.get("/", async (req, res) => {
     const listaCategorias = categoriaController.buscar();
     listaCategorias.then(categorias => 
@@ -21,7 +19,7 @@ router.post('/', (req, res) => {
 })
 
 router.put('/:id', (req, res) => {
-    const {id} = req.params; //armazena o id da requisicao
+    const {id} = req.params; 
     const resposta = categoriaController.alterar(id);
     res.send(resposta);
     })
@@ -32,4 +30,4 @@ router.delete('/:id', (req, res) => {
     res.send(resposta);
     })
 
-module.exports = router; //exporta como modulo
+module.exports = router; 
