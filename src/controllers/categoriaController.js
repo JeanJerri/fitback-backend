@@ -3,14 +3,14 @@ class Categoria {
     buscar() {
         return CategoriaModel.listar();
     }
-    criar() {
-        return "Categoria criada com sucesso";
+    criar(novaCategoria) {
+        return CategoriaModel.criar(novaCategoria);
     }
-    alterar(id) {
-        return "Categoria " + id + " atualizada com sucesso";
+    alterar(dadosAtualizados, id) {
+        return CategoriaModel.atualizar(dadosAtualizados, id);
     }
     apagar(id) {
-        return "Categoria " + id + " deletada com sucesso";
+        return CategoriaModel.apagar(id);
     }
 
     /*
