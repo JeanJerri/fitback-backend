@@ -5,7 +5,7 @@ class ClienteModel {
   async getAll() {
     const sql = `
       SELECT 
-        u.id_usuario, u.nome, u.email, u.cpf, u.tipo, u.status,
+        u.id_usuario, u.nome, u.email, u.cpf, u.tipo, u.status, u.data_cadastro,
         c.id_cliente, c.telefone, c.matricula, c.status_aluno, c.data_desistencia
       FROM usuario u
       JOIN cliente c ON u.id_usuario = c.id_usuario
