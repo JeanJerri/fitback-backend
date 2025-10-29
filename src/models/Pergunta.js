@@ -15,24 +15,28 @@ class PerguntaModel {
 
   async criarPergunta(data) {
     const sql =
-      "INSERT INTO pergunta (id_categoria, tipo, ordem_exibicao, conteudo) VALUES (?, ?, ?, ?)";
+      "INSERT INTO pergunta (id_categoria, tipo, ordem_exibicao, conteudo, permite_multiplas, obrigatoria) VALUES (?, ?, ?, ?, ?, ?)";
     const [result] = await conexao.query(sql, [
       data.id_categoria,
       data.tipo,
       data.ordem_exibicao,
       data.conteudo,
+      data.permite_multiplas || false,
+      data.obrigatoria || false    
     ]);
     return result.insertId;
   }
 
   async atualizarPergunta(id, data) {
     const sql =
-      "UPDATE pergunta SET id_categoria = ?, tipo = ?, ordem_exibicao = ?, conteudo = ? WHERE id_pergunta = ?";
+      "UPDATE pergunta SET id_categoria = ?, tipo = ?, ordem_exibicao = ?, conteudo = ?, permite_multiplas = ?, obrigatoria = ? WHERE id_pergunta = ?";
     await conexao.query(sql, [
       data.id_categoria,
       data.tipo,
       data.ordem_exibicao,
       data.conteudo,
+      data.permite_multiplas,
+      data.obrigatoria,    
       id,
     ]);
   }
