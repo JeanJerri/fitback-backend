@@ -11,6 +11,7 @@ module.exports = (app) => {
   app.get('/api/health', healthController.check);
   app.use('/api/clientes', routerCliente);
   app.use('/api/categorias', routerCategoria);
+  app.use('/api/perguntas', routerPergunta);
   app.use('/api/questionarios', routerQuestionario);
   app.use('/api/perguntas', routerPergunta);
 };

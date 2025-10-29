@@ -1,7 +1,7 @@
 const CategoriaModel = require('../models/Categoria');
 class Categoria {
     buscar() {
-        return CategoriaModel.listar();
+        return CategoriaModel.listarCategorias();
     }
     criar() {
         return "Categoria criada com sucesso";
@@ -52,7 +52,7 @@ const CategoriaModel = require('../models/Categoria');
 module.exports = {
     async buscar(req, res) {
         try {
-            const categorias = await CategoriaModel.listar();
+            const categorias = await CategoriaModel.listarCategorias();
             res.json(categorias);
         } catch (error) {
             res.status(500).json({ error: 'Erro ao buscar categorias' });

@@ -4,6 +4,9 @@ const perguntaController = require("../controllers/perguntaController");
 
 // Rotas do CRUD de Perguntas
 
+// GET - Listar perguntas com filtros
+router.get("/filtros", perguntaController.buscarPerguntaPorQuery);
+
 // GET - Listar todas as perguntas
 router.get("/", perguntaController.listarPerguntas);
 
