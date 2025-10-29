@@ -41,6 +41,12 @@ class PerguntaModel {
     const sql = "DELETE FROM pergunta WHERE id_pergunta = ?";
     await conexao.query(sql, [id]);
   }
+
+  async buscarPerguntasPeloModelo(idModelo) {
+    const sql = "SELECT p.* FROM pergunta p JOIN modelo_pergunta mp ON p.id_pergunta = mp.id_pergunta WHERE mp.id_modelo = ? ORDER BY mp.ordem";
+    const [rows] = await conexao.query(sql, [idModelo]);
+    return rows;
+  }
 }
 
 module.exports = new PerguntaModel();
