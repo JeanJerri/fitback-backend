@@ -23,6 +23,27 @@ class QuestionarioController {
     }
   }
 
+  async listarPerguntasModelo(req, res) {
+    const { id } = req.params;
+    try {
+      const perguntas = await QuestionarioModel.listarPerguntasModelo(id);
+      res.json(perguntas);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  async substituirPerguntasModelo(req, res) {
+    const { id } = req.params;
+    const { perguntas } = req.body; // expect [{ id_pergunta, ordem }, ...]
+    try {
+      await QuestionarioModel.substituirPerguntasModelo(id, perguntas);
+      res.json({ message: 'Perguntas do modelo atualizadas com sucesso' });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
   async criarModelo(req, res) {
     const data = req.body;
     try {
