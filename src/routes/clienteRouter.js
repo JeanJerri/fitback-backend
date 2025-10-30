@@ -19,5 +19,7 @@ router.put('/:id', clienteController.atualizar);
 // DELETE - Deletar um cliente
 router.delete('/:id', clienteController.apagar);
 
+// GET - Buscar cliente por nome ou CPF
+router.get('/buscar/:termo', clienteController.buscarClientePorNomeOuCpf);
 
 module.exports = router;	
