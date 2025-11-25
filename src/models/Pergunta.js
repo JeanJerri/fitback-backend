@@ -54,8 +54,7 @@ class PerguntaModel {
   }
 
   async listarPorFiltros({ search, categoria, tipo } = {}) {
-    // base query
-    let sql = `SELECT p.id_pergunta, p.conteudo, p.tipo, p.ordem_exibicao, p.id_categoria, c.nome as categoria
+    let sql = `SELECT p.*, c.nome as categoria
                FROM pergunta p
                JOIN categoria c ON p.id_categoria = c.id_categoria`;
 
@@ -81,7 +80,7 @@ class PerguntaModel {
 
     sql += " ORDER BY p.ordem_exibicao, p.id_pergunta";
 
-    const [rows] = await db.query(sql, params);
+    const [rows] = await conexao.query(sql, params);
     return rows;
   }
 }
