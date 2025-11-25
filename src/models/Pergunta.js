@@ -53,7 +53,7 @@ class PerguntaModel {
     return rows;
   }
 
-  async listarPorFiltros({ search, categoria, tipo } = {}) {
+  async listarPorFiltros({ termo, categoria, tipo } = {}) {
     let sql = `SELECT p.*, c.nome as categoria
                FROM pergunta p
                JOIN categoria c ON p.id_categoria = c.id_categoria`;
@@ -61,9 +61,9 @@ class PerguntaModel {
     const conditions = [];
     const params = [];
 
-    if (search) {
+    if (termo) {
       conditions.push("p.conteudo LIKE ?");
-      params.push(`%${search}%`);
+      params.push(`%${termo}%`);
     }
     if (categoria && categoria !== "Todas") {
       conditions.push("c.nome = ?");
