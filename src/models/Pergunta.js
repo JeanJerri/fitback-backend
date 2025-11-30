@@ -37,9 +37,13 @@ class PerguntaModel {
   }
 
   async criarPergunta(data) {
-    const sql =
-      "INSERT INTO pergunta (id_categoria, tipo, ordem_exibicao, conteudo, permite_multiplas, obrigatoria) VALUES (?, ?, ?, ?, ?, ?)";
-    const [result] = await conexao.query(sql, [
+    const sqlPergunta = `
+      INSERT INTO pergunta 
+      (id_categoria, tipo, ordem_exibicao, conteudo, permite_multiplas, obrigatoria)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
+
+    const [result] = await conexao.query(sqlPergunta, [
       data.id_categoria,
       data.tipo,
       data.ordem_exibicao,
@@ -47,26 +51,95 @@ class PerguntaModel {
       data.permite_multiplas || false,
       data.obrigatoria || false,
     ]);
+
+    const idPergunta = result.insertId;
+
+    if (data.tipo === "multipla_escolha" && Array.isArray(data.opcoes)) {
+      const sqlOpcao = `
+        INSERT INTO opcao_pergunta (id_pergunta, texto, ordem, ativo, tem_campo_outro)
+        VALUES (?, ?, ?, ?, ?)
+      `;
+
+      for (const opcao of data.opcoes) {
+        const ordem = data.opcoes.indexOf(opcao);
+        const ativo = true;
+        const outro = false;
+        await conexao.query(sqlOpcao, [
+          idPergunta,
+          opcao.texto,
+          ordem,
+          ativo,
+          outro,
+        ]);
+      }
+    }
     return result.insertId;
   }
 
   async atualizarPergunta(id, data) {
     const sql =
       "UPDATE pergunta SET id_categoria = ?, tipo = ?, ordem_exibicao = ?, conteudo = ?, permite_multiplas = ?, obrigatoria = ? WHERE id_pergunta = ?";
+
     await conexao.query(sql, [
       data.id_categoria,
       data.tipo,
       data.ordem_exibicao,
       data.conteudo,
-      data.permite_multiplas,
-      data.obrigatoria,
+      data.permite_multiplas || 0,
+      data.obrigatoria || 0,
       id,
     ]);
+
+    if (data.tipo !== "multipla_escolha") {
+      await conexao.query("DELETE FROM opcao_pergunta WHERE id_pergunta = ?", [
+        id,
+      ]);
+      return;
+    }
+
+    const [opcoesAtuais] = await conexao.query(
+      "SELECT id_opcao FROM opcao_pergunta WHERE id_pergunta = ?",
+      [id]
+    );
+
+    const idsAtuais = opcoesAtuais.map((o) => o.id_opcao);
+    const idsNovos = data.opcoes
+      .filter((o) => o.id_opcao)
+      .map((o) => o.id_opcao);
+
+    const idsParaRemover = idsAtuais.filter(
+      (idOpt) => !idsNovos.includes(idOpt)
+    );
+
+    if (idsParaRemover.length > 0) {
+      await conexao.query(
+        `DELETE FROM opcao_pergunta WHERE id_opcao IN (${idsParaRemover.join(
+          ","
+        )})`
+      );
+    }
+
+    for (const opc of data.opcoes) {
+      if (opc.id_opcao) {
+        await conexao.query(
+          "UPDATE opcao_pergunta SET texto = ? WHERE id_opcao = ?",
+          [opc.texto, opc.id_opcao]
+        );
+      } else {
+        await conexao.query(
+          "INSERT INTO opcao_pergunta (id_pergunta, texto) VALUES (?, ?)",
+          [id, opc.texto]
+        );
+      }
+    }
   }
 
   async deletarPergunta(id) {
-    const sql = "DELETE FROM pergunta WHERE id_pergunta = ?";
-    await conexao.query(sql, [id]);
+    await conexao.query("DELETE FROM opcao_pergunta WHERE id_pergunta = ?", [
+      id,
+    ]);
+
+    await conexao.query("DELETE FROM pergunta WHERE id_pergunta = ?", [id]);
   }
 
   async buscarPerguntasPeloModelo(idModelo) {
