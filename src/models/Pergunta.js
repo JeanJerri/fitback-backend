@@ -1,20 +1,35 @@
 const conexao = require("../config/db");
 
 class PerguntaModel {
-
   async listarPerguntas() {
-    const sqlPergunta = "SELECT * FROM pergunta";
-    const [perguntas] = await conexao.query(sqlPergunta);
+    const sqlPerguntas = `
+      SELECT 
+        p.*, 
+        c.nome AS categoria_nome
+      FROM pergunta p
+      JOIN categoria c ON c.id_categoria = p.id_categoria
+    `;
+
+    const [perguntas] = await conexao.query(sqlPerguntas);
+
+    const sqlOpcoes = "SELECT * FROM opcao_pergunta WHERE id_pergunta = ?";
 
     for (const pergunta of perguntas) {
-      const sqlOpcao = "SELECT * FROM opcao_pergunta WHERE id_pergunta = ?";
-      const [opcoes] = await conexao.query(sqlOpcao, [pergunta.id_pergunta]);
+      pergunta.obrigatoria = Boolean(pergunta.obrigatoria);
+      pergunta.permite_multiplas = Boolean(pergunta.permite_multiplas);
+
+      const [opcoes] = await conexao.query(sqlOpcoes, [pergunta.id_pergunta]);
+
+      opcoes.forEach((op) => {
+        if ("correta" in op) op.correta = Boolean(op.correta);
+      });
 
       pergunta.opcoes = opcoes;
     }
 
     return perguntas;
   }
+
   async buscarPerguntaPorId(id) {
     const sql = "SELECT * FROM pergunta WHERE id_pergunta = ?";
     const [rows] = await conexao.query(sql, [id]);
