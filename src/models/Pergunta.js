@@ -1,12 +1,20 @@
 const conexao = require("../config/db");
 
 class PerguntaModel {
-  async listarPerguntas() {
-    const sql = "SELECT * FROM pergunta";
-    const [rows] = await conexao.query(sql);
-    return rows;
-  }
 
+  async listarPerguntas() {
+    const sqlPergunta = "SELECT * FROM pergunta";
+    const [perguntas] = await conexao.query(sqlPergunta);
+
+    for (const pergunta of perguntas) {
+      const sqlOpcao = "SELECT * FROM opcao_pergunta WHERE id_pergunta = ?";
+      const [opcoes] = await conexao.query(sqlOpcao, [pergunta.id_pergunta]);
+
+      pergunta.opcoes = opcoes;
+    }
+
+    return perguntas;
+  }
   async buscarPerguntaPorId(id) {
     const sql = "SELECT * FROM pergunta WHERE id_pergunta = ?";
     const [rows] = await conexao.query(sql, [id]);
@@ -53,7 +61,7 @@ class PerguntaModel {
     return rows;
   }
 
-  async listarPorFiltros({ termo, categoria, tipo } = {}) {
+  async listarPorFiltros({ termo, idCategoria, tipo } = {}) {
     let sql = `SELECT p.*, c.nome as categoria
                FROM pergunta p
                JOIN categoria c ON p.id_categoria = c.id_categoria`;
@@ -65,9 +73,9 @@ class PerguntaModel {
       conditions.push("p.conteudo LIKE ?");
       params.push(`%${termo}%`);
     }
-    if (categoria && categoria !== "Todas") {
-      conditions.push("c.nome = ?");
-      params.push(categoria);
+    if (idCategoria && idCategoria !== "Todas") {
+      conditions.push("c.id_categoria = ?");
+      params.push(idCategoria);
     }
     if (tipo && tipo !== "Todas") {
       conditions.push("p.tipo = ?");

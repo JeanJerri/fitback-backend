@@ -3,10 +3,10 @@ const PerguntaModel = require("../models/Pergunta");
 class PerguntaController {
   async buscarPerguntaPorQuery(req, res) {
     try {
-      const { termo, categoria, tipo } = req.query;
+      const { termo, idCategoria, tipo } = req.query;
       const perguntas = await PerguntaModel.listarPorFiltros({
         termo,
-        categoria,
+        idCategoria,
         tipo,
       });
       res.json(perguntas);
