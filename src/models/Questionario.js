@@ -119,14 +119,14 @@ class QuestionarioModel {
 
     const sql = `
     SELECT *
-    FROM questionario
-    WHERE id_questionario LIKE ?
-       OR titulo LIKE ?
+    FROM questionario_modelo
+    WHERE id_modelo LIKE ?
+       OR nome LIKE ?
        OR descricao LIKE ?
-    ORDER BY id_questionario DESC
+    ORDER BY id_modelo DESC
   `;
 
-    const [rows] = await conexao.query(sql, [termo, termo, termo]);
+    const [rows] = await db.query(sql, [termo, termo, termo]);
     return rows;
   }
 }

@@ -4,6 +4,8 @@ const questionarioController = require("../controllers/questionarioController");
 
 // Rotas do CRUD de Questionários
 
+router.get("/buscar", questionarioController.buscarModelosPorQuery);
+
 // GET - Listar todos os modelos de questionários
 router.get("/", questionarioController.listarModelos);
 
