@@ -38,7 +38,7 @@ class QuestionarioController {
     const { perguntas } = req.body; // expect [{ id_pergunta, ordem }, ...]
     try {
       await QuestionarioModel.substituirPerguntasModelo(id, perguntas);
-      res.json({ message: 'Perguntas do modelo atualizadas com sucesso' });
+      res.json({ message: "Perguntas do modelo atualizadas com sucesso" });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
@@ -72,6 +72,31 @@ class QuestionarioController {
       res.json({ message: "Modelo deletado com sucesso" });
     } catch (error) {
       res.status(500).json({ error: error.message });
+    }
+  }
+
+  async buscarModelosPorQuery(req, res) {
+    console.log("Entrou em buscarModelosPorQuery");
+    try {
+      const { termo } = req.query;
+      console.log(termo);
+
+      if (!termo || termo.trim() === "") {
+        return res
+          .status(400)
+          .json({ erro: "O parâmetro termo é obrigatório." });
+      }
+
+      const resultados = await QuestionarioModel.buscarQuestionariosPorQuery(
+        termo
+      );
+      
+      res.json(resultados);
+    } catch (erro) {
+      console.error("Erro ao buscar questionários:", erro);
+      return res
+        .status(500)
+        .json({ erro: "Erro interno ao buscar questionários." });
     }
   }
 }

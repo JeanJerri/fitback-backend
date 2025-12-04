@@ -2,7 +2,6 @@ const db = require("../config/db");
 const {
   buscarPerguntaPorId,
   buscarPerguntasPeloModelo,
-  atualizarPergunta,
 } = require("./Pergunta");
 
 class QuestionarioModel {
@@ -52,7 +51,7 @@ class QuestionarioModel {
     if (data.perguntasIds.length > 0) {
       const perguntasAtuais = await buscarPerguntasPeloModelo(id);
       const perguntasAtuaisIds = perguntasAtuais.map((p) => p.id_pergunta);
-      
+
       for (const [index, idPergunta] of data.perguntasIds.entries()) {
         if (!perguntasAtuaisIds.includes(idPergunta)) {
           const sqlInserirPergunta =
@@ -91,11 +90,18 @@ class QuestionarioModel {
       await conn.beginTransaction();
 
       // remover existentes
-      await conn.query('DELETE FROM modelo_pergunta WHERE id_modelo = ?', [id_modelo]);
+      await conn.query("DELETE FROM modelo_pergunta WHERE id_modelo = ?", [
+        id_modelo,
+      ]);
 
       if (perguntas && perguntas.length) {
-        const values = perguntas.map(p => [id_modelo, p.id_pergunta, p.ordem]);
-        const insertSql = 'INSERT INTO modelo_pergunta (id_modelo, id_pergunta, ordem) VALUES ?';
+        const values = perguntas.map((p) => [
+          id_modelo,
+          p.id_pergunta,
+          p.ordem,
+        ]);
+        const insertSql =
+          "INSERT INTO modelo_pergunta (id_modelo, id_pergunta, ordem) VALUES ?";
         await conn.query(insertSql, [values]);
       }
 
@@ -106,6 +112,22 @@ class QuestionarioModel {
     } finally {
       conn.release();
     }
+  }
+
+  async buscarQuestionariosPorQuery(query) {
+    const termo = `%${query}%`;
+
+    const sql = `
+    SELECT *
+    FROM questionario
+    WHERE id_questionario LIKE ?
+       OR titulo LIKE ?
+       OR descricao LIKE ?
+    ORDER BY id_questionario DESC
+  `;
+
+    const [rows] = await conexao.query(sql, [termo, termo, termo]);
+    return rows;
   }
 }
 

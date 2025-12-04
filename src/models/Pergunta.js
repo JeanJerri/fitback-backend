@@ -150,6 +150,7 @@ class PerguntaModel {
   }
 
   async listarPorFiltros({ termo, idCategoria, tipo } = {}) {
+    console.log("Filtros recebidos no model:", { termo, idCategoria, tipo });
     let sql = `SELECT p.*, c.nome as categoria
                FROM pergunta p
                JOIN categoria c ON p.id_categoria = c.id_categoria`;

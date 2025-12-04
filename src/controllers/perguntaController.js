@@ -4,6 +4,7 @@ class PerguntaController {
   async buscarPerguntaPorQuery(req, res) {
     try {
       const { termo, idCategoria, tipo } = req.query;
+      console.log("Filtros recebidos no controller:", { termo, idCategoria, tipo });
       const perguntas = await PerguntaModel.listarPorFiltros({
         termo,
         idCategoria,
