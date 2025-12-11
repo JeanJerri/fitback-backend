@@ -131,6 +131,7 @@ class ClienteModel {
     try {
       await conn.beginTransaction();
 
+      // Verifica existência do cliente
       const [rows] = await conn.query(
         "SELECT id_usuario FROM cliente WHERE id_cliente = ?",
         [id_cliente]
@@ -140,9 +141,29 @@ class ClienteModel {
       }
       const id_usuario = rows[0].id_usuario;
 
-      const { telefone, matricula, status_aluno, data_desistencia } = cliente;
+      // Extrai valores (podem ser undefined se não enviados)
+      let {
+        telefone,
+        matricula,
+        status_aluno,
+        data_desistencia,
+        nome,
+        email,
+        cpf,
+        status,
+      } = cliente;
 
-      if (cpf) {
+      const hasCpf =
+        cpf !== undefined && cpf !== null && String(cpf).trim() !== "";
+      const hasEmail =
+        email !== undefined && email !== null && String(email).trim() !== "";
+      const hasMatricula =
+        matricula !== undefined &&
+        matricula !== null &&
+        String(matricula).trim() !== "";
+
+      if (hasCpf) {
+        cpf = String(cpf).replace(/\D/g, "");
         const [cpfRow] = await conn.query(
           "SELECT id_usuario FROM usuario WHERE cpf = ? AND id_usuario != ?",
           [cpf, id_usuario]
@@ -150,7 +171,8 @@ class ClienteModel {
         if (cpfRow.length > 0) throw new Error("CPF já cadastrado.");
       }
 
-      if (email) {
+      if (hasEmail) {
+        email = String(email).trim().toLowerCase();
         const [emailRow] = await conn.query(
           "SELECT id_usuario FROM usuario WHERE email = ? AND id_usuario != ?",
           [email, id_usuario]
@@ -158,7 +180,8 @@ class ClienteModel {
         if (emailRow.length > 0) throw new Error("Email já cadastrado.");
       }
 
-      if (matricula) {
+      if (hasMatricula) {
+        matricula = String(matricula).trim();
         const [matriculaRow] = await conn.query(
           "SELECT id_cliente FROM cliente WHERE matricula = ? AND id_cliente != ?",
           [matricula, id_cliente]
@@ -167,20 +190,73 @@ class ClienteModel {
           throw new Error("Matrícula já cadastrada.");
       }
 
-      const sqlCliente =
-        "UPDATE cliente SET telefone = ?, matricula = ?, status_aluno = ?, data_desistencia = ? WHERE id_cliente = ?";
-      await conn.query(sqlCliente, [
-        telefone,
-        matricula,
-        status_aluno,
-        data_desistencia,
-        id_cliente,
-      ]);
+      const fieldsCliente = [];
+      const valuesCliente = [];
 
-      const { nome, email, cpf, status } = cliente;
-      const sqlUsuario =
-        "UPDATE usuario SET nome = ?, email = ?, cpf = ?, status = ? WHERE id_usuario = ?";
-      await conn.query(sqlUsuario, [nome, email, cpf, status, id_usuario]);
+      if (telefone !== undefined) {
+        fieldsCliente.push("telefone = ?");
+        valuesCliente.push(telefone);
+      }
+
+      if (hasMatricula) {
+        fieldsCliente.push("matricula = ?");
+        valuesCliente.push(matricula);
+      } else if (matricula !== undefined && String(matricula).trim() === "") {
+        fieldsCliente.push("matricula = ?");
+        valuesCliente.push(matricula);
+      }
+
+      if (status_aluno !== undefined) {
+        fieldsCliente.push("status_aluno = ?");
+        valuesCliente.push(status_aluno);
+      }
+
+      if (data_desistencia !== undefined) {
+        fieldsCliente.push("data_desistencia = ?");
+        valuesCliente.push(data_desistencia);
+      }
+
+      if (fieldsCliente.length > 0) {
+        valuesCliente.push(id_cliente);
+        const sqlCliente = `UPDATE cliente SET ${fieldsCliente.join(
+          ", "
+        )} WHERE id_cliente = ?`;
+        await conn.query(sqlCliente, valuesCliente);
+      }
+
+      const fieldsUsuario = [];
+      const valuesUsuario = [];
+
+      if (nome !== undefined) {
+        fieldsUsuario.push("nome = ?");
+        valuesUsuario.push(nome);
+      }
+
+      if (hasEmail) {
+        fieldsUsuario.push("email = ?");
+        valuesUsuario.push(email);
+      } else if (email !== undefined && String(email).trim() === "") {
+        fieldsUsuario.push("email = ?");
+        valuesUsuario.push(email);
+      }
+
+      if (hasCpf) {
+        fieldsUsuario.push("cpf = ?");
+        valuesUsuario.push(cpf);
+      }
+
+      if (status !== undefined) {
+        fieldsUsuario.push("status = ?");
+        valuesUsuario.push(status);
+      }
+
+      if (fieldsUsuario.length > 0) {
+        valuesUsuario.push(id_usuario);
+        const sqlUsuario = `UPDATE usuario SET ${fieldsUsuario.join(
+          ", "
+        )} WHERE id_usuario = ?`;
+        await conn.query(sqlUsuario, valuesUsuario);
+      }
 
       await conn.commit();
       return true;
