@@ -1,5 +1,8 @@
 // src/controllers/clienteController.js
-
+const { isValidEmail } = require("../utils/validateEmail.js");
+const { isValidPassword } = require("../utils/validatePassword.js");
+const { isValidCPF } = require("../utils/validateCPF.js");
+const { isValidPhone } = require("../utils/validatePhone.js");
 const ClienteModel = require("../models/Cliente");
 
 class Cliente {
@@ -27,7 +30,38 @@ class Cliente {
   }
 
   async criar(req, res) {
-    const novoCliente = req.body; // Envia todos os dados (nome, email, senha, telefone, etc)
+    const novoCliente = req.body;
+
+    const validationErrors = {};
+    if (!novoCliente.nome || novoCliente.nome.trim() === "") {
+      validationErrors.nome = "Nome é obrigatorio";
+    }
+
+    if (!isValidCPF(novoCliente.cpf)) {
+      validationErrors.cpf = "CPF deve conter 11 digitos";
+    }
+
+    if (!isValidEmail(novoCliente.email)) {
+      validationErrors.email = "Email inválido";
+    }
+
+    if (!isValidPhone(novoCliente.telefone)) {
+      validationErrors.telefone = "Telefone deve conter entre 10 e 11 dígitos";
+    }
+
+    const passwordErrors = isValidPassword(novoCliente.senha);
+    if (passwordErrors.length > 0) {
+      validationErrors.senha = passwordErrors[0];
+    }
+
+    if (novoCliente.senha !== novoCliente.confirmarSenha) {
+      validationErrors.confirmarSenha = "As senhas não coincidem";
+    }
+
+    if (Object.keys(validationErrors).length > 0) {
+      return res.status(400).json({ validationErrors });
+    }
+
     try {
       const id = await ClienteModel.create(novoCliente);
       res.status(201).json({ id_cliente: id, ...novoCliente });

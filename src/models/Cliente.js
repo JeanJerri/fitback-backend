@@ -49,7 +49,7 @@ class ClienteModel {
       const {
         nome,
         email,
-        senha_hash,
+        senha,
         cpf,
         status,
         telefone,
@@ -62,7 +62,7 @@ class ClienteModel {
       const [resultUsuario] = await conn.query(sqlUsuario, [
         nome,
         email,
-        senha_hash,
+        senha,
         "cliente",
         cpf,
         status || "ativo",
