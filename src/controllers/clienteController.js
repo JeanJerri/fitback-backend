@@ -66,6 +66,7 @@ class Cliente {
       const id = await ClienteModel.create(novoCliente);
       res.status(201).json({ id_cliente: id, ...novoCliente });
     } catch (error) {
+      console.log(error);
       res.status(500).json({ error: error.message });
     }
   }

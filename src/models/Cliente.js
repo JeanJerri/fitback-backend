@@ -1,6 +1,30 @@
 const db = require("../config/db");
 
 class ClienteModel {
+  async cpfExists(cpf) {
+    const [rows] = await db.query(
+      "SELECT id_usuario FROM usuario WHERE cpf = ?",
+      [cpf]
+    );
+    return rows.length > 0;
+  }
+
+  async emailExists(email) {
+    const [rows] = await db.query(
+      "SELECT id_usuario FROM usuario WHERE email = ?",
+      [email]
+    );
+    return rows.length > 0;
+  }
+
+  async matriculaExists(matricula) {
+    const [rows] = await db.query(
+      "SELECT id_cliente FROM cliente WHERE matricula = ?",
+      [matricula]
+    );
+    return rows.length > 0;
+  }
+
   async getByNameOrCpf(termo) {
     const sql = `
       SELECT
@@ -12,7 +36,6 @@ class ClienteModel {
     `;
 
     const [rows] = await db.query(sql, [`%${termo}%`, `%${termo}%`]);
-    console.log(rows);
     return rows;
   }
 
@@ -56,6 +79,18 @@ class ClienteModel {
         matricula,
         status_aluno,
       } = cliente;
+
+      if (await this.cpfExists(cpf)) {
+        throw new Error("CPF já cadastrado.");
+      }
+
+      if (await this.emailExists(email)) {
+        throw new Error("Email já cadastrado.");
+      }
+
+      if (await this.matriculaExists(matricula)) {
+        throw new Error("Matrícula já cadastrada.");
+      }
 
       const sqlUsuario =
         "INSERT INTO usuario (nome, email, senha_hash, tipo, cpf, status) VALUES (?, ?, ?, ?, ?, ?)";
@@ -106,6 +141,32 @@ class ClienteModel {
       const id_usuario = rows[0].id_usuario;
 
       const { telefone, matricula, status_aluno, data_desistencia } = cliente;
+
+      if (cpf) {
+        const [cpfRow] = await conn.query(
+          "SELECT id_usuario FROM usuario WHERE cpf = ? AND id_usuario != ?",
+          [cpf, id_usuario]
+        );
+        if (cpfRow.length > 0) throw new Error("CPF já cadastrado.");
+      }
+
+      if (email) {
+        const [emailRow] = await conn.query(
+          "SELECT id_usuario FROM usuario WHERE email = ? AND id_usuario != ?",
+          [email, id_usuario]
+        );
+        if (emailRow.length > 0) throw new Error("Email já cadastrado.");
+      }
+
+      if (matricula) {
+        const [matriculaRow] = await conn.query(
+          "SELECT id_cliente FROM cliente WHERE matricula = ? AND id_cliente != ?",
+          [matricula, id_cliente]
+        );
+        if (matriculaRow.length > 0)
+          throw new Error("Matrícula já cadastrada.");
+      }
+
       const sqlCliente =
         "UPDATE cliente SET telefone = ?, matricula = ?, status_aluno = ?, data_desistencia = ? WHERE id_cliente = ?";
       await conn.query(sqlCliente, [
