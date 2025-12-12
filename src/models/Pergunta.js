@@ -37,11 +37,23 @@ class PerguntaModel {
   }
 
   async criarPergunta(data) {
+    const [existe] = await conexao.query(
+      `SELECT id_pergunta FROM pergunta 
+     WHERE conteudo = ? AND id_categoria = ?`,
+      [data.conteudo, data.id_categoria]
+    );
+
+    if (existe.length > 0) {
+      throw new Error(
+        "Já existe uma pergunta com esse conteúdo nesta categoria."
+      );
+    }
+
     const sqlPergunta = `
-      INSERT INTO pergunta 
-      (id_categoria, tipo, ordem_exibicao, conteudo, permite_multiplas, obrigatoria)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `;
+    INSERT INTO pergunta 
+    (id_categoria, tipo, ordem_exibicao, conteudo, permite_multiplas, obrigatoria)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `;
 
     const [result] = await conexao.query(sqlPergunta, [
       data.id_categoria,
@@ -56,27 +68,37 @@ class PerguntaModel {
 
     if (data.tipo === "multipla_escolha" && Array.isArray(data.opcoes)) {
       const sqlOpcao = `
-        INSERT INTO opcao_pergunta (id_pergunta, texto, ordem, ativo, tem_campo_outro)
-        VALUES (?, ?, ?, ?, ?)
-      `;
+      INSERT INTO opcao_pergunta (id_pergunta, texto, ordem, ativo, tem_campo_outro)
+      VALUES (?, ?, ?, ?, ?)
+    `;
 
       for (const opcao of data.opcoes) {
-        const ordem = data.opcoes.indexOf(opcao);
-        const ativo = true;
-        const outro = false;
         await conexao.query(sqlOpcao, [
           idPergunta,
           opcao.texto,
-          ordem,
-          ativo,
-          outro,
+          data.opcoes.indexOf(opcao),
+          true,
+          false,
         ]);
       }
     }
-    return result.insertId;
+
+    return idPergunta;
   }
 
   async atualizarPergunta(id, data) {
+    const [existe] = await conexao.query(
+      `SELECT id_pergunta FROM pergunta 
+     WHERE conteudo = ? AND id_categoria = ? AND id_pergunta <> ?`,
+      [data.conteudo, data.id_categoria, id]
+    );
+
+    if (existe.length > 0) {
+      throw new Error(
+        "Já existe outra pergunta com esse conteúdo nesta categoria."
+      );
+    }
+
     const sql =
       "UPDATE pergunta SET id_categoria = ?, tipo = ?, ordem_exibicao = ?, conteudo = ?, permite_multiplas = ?, obrigatoria = ? WHERE id_pergunta = ?";
 
