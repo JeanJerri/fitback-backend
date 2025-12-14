@@ -49,10 +49,10 @@ class PerguntaModel {
     }
 
     const sqlPergunta = `
-    INSERT INTO pergunta 
-    (id_categoria, tipo, ordem_exibicao, conteudo, permite_multiplas, obrigatoria)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `;
+      INSERT INTO pergunta 
+      (id_categoria, tipo, ordem_exibicao, conteudo, permite_multiplas, obrigatoria, status_pergunta)
+      VALUES (?, ?, ?, ?, ?, ?, 'ativo')
+    `;
 
     const [result] = await db.query(sqlPergunta, [
       data.id_categoria,
@@ -98,8 +98,18 @@ class PerguntaModel {
       );
     }
 
-    const sql =
-      "UPDATE pergunta SET id_categoria = ?, tipo = ?, ordem_exibicao = ?, conteudo = ?, permite_multiplas = ?, obrigatoria = ? WHERE id_pergunta = ?";
+    const sql = `
+      UPDATE pergunta 
+      SET 
+        id_categoria = ?, 
+        tipo = ?, 
+        ordem_exibicao = ?, 
+        conteudo = ?, 
+        permite_multiplas = ?, 
+        obrigatoria = ?,
+        status_pergunta = COALESCE(?, status_pergunta)
+      WHERE id_pergunta = ?
+    `;
 
     await db.query(sql, [
       data.id_categoria,
@@ -108,6 +118,7 @@ class PerguntaModel {
       data.conteudo,
       data.permite_multiplas || 0,
       data.obrigatoria || 0,
+      data.status_pergunta,
       id,
     ]);
 
