@@ -1,12 +1,12 @@
 const db = require("../config/db");
-const { buscarPerguntasPeloModelo } = require("./Pergunta");
+const { buscarPeloModelo } = require("./Pergunta");
 
 class QuestionarioModel {
   async buscarTodos() {
     const sqlModelo = "SELECT * FROM questionario_modelo";
     const [rows] = await db.query(sqlModelo);
     for (const modelo of rows) {
-      const perguntas = await buscarPerguntasPeloModelo(modelo.id_modelo);
+      const perguntas = await buscarPeloModelo(modelo.id_modelo);
       modelo.perguntas = perguntas;
     }
     return rows;
@@ -20,7 +20,7 @@ class QuestionarioModel {
       return null;
     }
 
-    const perguntas = await buscarPerguntasPeloModelo(id);
+    const perguntas = await buscarPeloModelo(id);
 
     return {
       ...rows[0],
@@ -108,8 +108,8 @@ class QuestionarioModel {
       if (data.nome) {
         const [nomeRows] = await conn.query(
           `
-        SELECT id_modelo 
-        FROM questionario_modelo 
+        SELECT id_modelo
+        FROM questionario_modelo
         WHERE nome = ? AND id_modelo != ?
         `,
           [data.nome, idModelo]
@@ -132,8 +132,8 @@ class QuestionarioModel {
 
         const [perguntasValidas] = await conn.query(
           `
-        SELECT id_pergunta 
-        FROM pergunta 
+        SELECT id_pergunta
+        FROM pergunta
         WHERE id_pergunta IN (?)
         `,
           [data.perguntasIds]
@@ -155,14 +155,36 @@ class QuestionarioModel {
         }
       }
 
-      await conn.query(
-        `
-      UPDATE questionario_modelo
-      SET nome = ?, descricao = ?
-      WHERE id_modelo = ?
-      `,
-        [data.nome, data.descricao, idModelo]
-      );
+      const campos = [];
+      const valores = [];
+
+      if (data.nome !== undefined) {
+        campos.push("nome = ?");
+        valores.push(data.nome);
+      }
+
+      if (data.descricao !== undefined) {
+        campos.push("descricao = ?");
+        valores.push(data.descricao);
+      }
+
+      if (data.status_questionario !== undefined) {
+        campos.push("status_questionario = ?");
+        valores.push(data.status_questionario);
+      }
+
+      if (campos.length > 0) {
+        valores.push(idModelo);
+
+        await conn.query(
+          `
+        UPDATE questionario_modelo
+        SET ${campos.join(", ")}
+        WHERE id_modelo = ?
+        `,
+          valores
+        );
+      }
 
       await conn.commit();
       return true;
