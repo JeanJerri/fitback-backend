@@ -185,7 +185,7 @@ class QuestionarioModel {
                  FROM modelo_pergunta mp
                  JOIN pergunta p ON mp.id_pergunta = p.id_pergunta
                  WHERE mp.id_modelo = ?
-                 ORDER BY mp.ordem`;
+                 ORDER BY mp.ordem ASC`;
     const [rows] = await db.query(sql, [id_modelo]);
     return rows;
   }

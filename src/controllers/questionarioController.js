@@ -179,7 +179,7 @@ class QuestionarioController {
   }
 
   async atualizarOrdemPerguntas(req, res) {
-    const { idModelo } = req.params;
+    const { id } = req.params;
     const { perguntasIds } = req.body;
 
     if (!Array.isArray(perguntasIds)) {
@@ -188,7 +188,7 @@ class QuestionarioController {
       });
     }
 
-    await QuestionarioModel.atualizarOrdemPerguntas(idModelo, perguntasIds);
+    await QuestionarioModel.atualizarOrdemPerguntas(id, perguntasIds);
     res.json({ message: "Ordem atualizada com sucesso" });
   }
 }

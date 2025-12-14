@@ -174,7 +174,7 @@ class PerguntaModel {
     JOIN categoria c 
       ON p.id_categoria = c.id_categoria
     WHERE mp.id_modelo = ?
-    ORDER BY mp.ordem
+    ORDER BY mp.ordem ASC
   `;
 
     const [rows] = await conexao.query(sql, [idModelo]);
