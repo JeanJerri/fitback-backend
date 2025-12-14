@@ -1,7 +1,7 @@
 const db = require("../config/db");
 
 class ClienteModel {
-  async cpfExists(cpf) {
+  async cpfExiste(cpf) {
     const [rows] = await db.query(
       "SELECT id_usuario FROM usuario WHERE cpf = ?",
       [cpf]
@@ -9,7 +9,7 @@ class ClienteModel {
     return rows.length > 0;
   }
 
-  async emailExists(email) {
+  async emailExiste(email) {
     const [rows] = await db.query(
       "SELECT id_usuario FROM usuario WHERE email = ?",
       [email]
@@ -17,7 +17,7 @@ class ClienteModel {
     return rows.length > 0;
   }
 
-  async matriculaExists(matricula) {
+  async matriculaExiste(matricula) {
     const [rows] = await db.query(
       "SELECT id_cliente FROM cliente WHERE matricula = ?",
       [matricula]
@@ -25,7 +25,7 @@ class ClienteModel {
     return rows.length > 0;
   }
 
-  async getByNameOrCpf(termo) {
+  async buscarPorFiltros(termo) {
     const sql = `
       SELECT
         u.id_usuario, u.nome, u.email, u.cpf, u.tipo, u.status, u.data_cadastro,
@@ -39,7 +39,7 @@ class ClienteModel {
     return rows;
   }
 
-  async getAll() {
+  async buscarTodos() {
     const sql = `
       SELECT 
         u.id_usuario, u.nome, u.email, u.cpf, u.tipo, u.status, u.data_cadastro,
@@ -51,7 +51,7 @@ class ClienteModel {
     return rows;
   }
 
-  async getById(id_cliente) {
+  async buscarPorId(id_cliente) {
     const sql = `
       SELECT 
         u.id_usuario, u.nome, u.email, u.cpf, u.tipo, u.status,
@@ -64,7 +64,7 @@ class ClienteModel {
     return rows[0];
   }
 
-  async create(cliente) {
+  async criar(cliente) {
     const conn = await db.getConnection();
     try {
       await conn.beginTransaction();
@@ -80,15 +80,15 @@ class ClienteModel {
         status_aluno,
       } = cliente;
 
-      if (await this.cpfExists(cpf)) {
+      if (await this.cpfExiste(cpf)) {
         throw new Error("CPF já cadastrado.");
       }
 
-      if (await this.emailExists(email)) {
+      if (await this.emailExiste(email)) {
         throw new Error("Email já cadastrado.");
       }
 
-      if (await this.matriculaExists(matricula)) {
+      if (await this.matriculaExiste(matricula)) {
         throw new Error("Matrícula já cadastrada.");
       }
 
@@ -126,12 +126,11 @@ class ClienteModel {
     }
   }
 
-  async update(id_cliente, cliente) {
+  async atualizar(id_cliente, cliente) {
     const conn = await db.getConnection();
     try {
       await conn.beginTransaction();
 
-      // Verifica existência do cliente
       const [rows] = await conn.query(
         "SELECT id_usuario FROM cliente WHERE id_cliente = ?",
         [id_cliente]
@@ -141,7 +140,6 @@ class ClienteModel {
       }
       const id_usuario = rows[0].id_usuario;
 
-      // Extrai valores (podem ser undefined se não enviados)
       let {
         telefone,
         matricula,
@@ -269,7 +267,7 @@ class ClienteModel {
     }
   }
 
-  async del(id_cliente) {
+  async deletar(id_cliente) {
     const conn = await db.getConnection();
     try {
       await conn.beginTransaction();

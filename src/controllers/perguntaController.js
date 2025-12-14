@@ -1,10 +1,10 @@
 const PerguntaModel = require("../models/Pergunta");
 
 class PerguntaController {
-  async buscarPerguntaPorQuery(req, res) {
+  async buscarPorFiltros(req, res) {
     try {
       const { termo, idCategoria, tipo } = req.query;
-      const perguntas = await PerguntaModel.listarPorFiltros({
+      const perguntas = await PerguntaModel.buscarPorFiltros({
         termo,
         idCategoria,
         tipo,
@@ -15,19 +15,19 @@ class PerguntaController {
     }
   }
 
-  async listarPerguntas(req, res) {
+  async buscarTodos(req, res) {
     try {
-      const perguntas = await PerguntaModel.listarPerguntas();
+      const perguntas = await PerguntaModel.buscarTodos();
       res.json(perguntas);
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
   }
 
-  async buscarPerguntaPorId(req, res) {
+  async buscarPorId(req, res) {
     const { id } = req.params;
     try {
-      const pergunta = await PerguntaModel.buscarPerguntaPorId(id);
+      const pergunta = await PerguntaModel.buscarPorId(id);
       if (!pergunta) {
         return res.status(404).json({ error: "Pergunta não encontrada" });
       }
@@ -37,7 +37,7 @@ class PerguntaController {
     }
   }
 
-  async criarPergunta(req, res) {
+  async criar(req, res) {
     const data = req.body;
 
     const validationErrors = {};
@@ -69,7 +69,7 @@ class PerguntaController {
     }
 
     try {
-      const id = await PerguntaModel.criarPergunta(data);
+      const id = await PerguntaModel.criar(data);
 
       res.status(201).json({ id, ...data });
     } catch (error) {
@@ -77,7 +77,7 @@ class PerguntaController {
     }
   }
 
-  async atualizarPergunta(req, res) {
+  async atualizar(req, res) {
     const { id } = req.params;
     const data = req.body;
 
@@ -110,17 +110,17 @@ class PerguntaController {
     }
 
     try {
-      await PerguntaModel.atualizarPergunta(id, data);
+      await PerguntaModel.atualizar(id, data);
       res.json({ message: "Pergunta atualizada com sucesso" });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
   }
 
-  async deletarPergunta(req, res) {
+  async deletar(req, res) {
     const { id } = req.params;
     try {
-      await PerguntaModel.deletarPergunta(id);
+      await PerguntaModel.deletar(id);
       res.json({ message: "Pergunta deletada com sucesso" });
     } catch (error) {
       res.status(500).json({ error: error.message });

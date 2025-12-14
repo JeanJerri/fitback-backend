@@ -21,7 +21,5 @@ export const isValidPassword = (password) => {
     errors.push("Senha deve conter pelo menos um caractere especial.");
   }
 
-  console.log(errors);
-
   return errors;
 };

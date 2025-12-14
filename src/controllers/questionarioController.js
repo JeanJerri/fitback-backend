@@ -1,19 +1,19 @@
 const QuestionarioModel = require("../models/Questionario");
 
 class QuestionarioController {
-  async listarModelos(req, res) {
+  async buscarTodos(req, res) {
     try {
-      const modelos = await QuestionarioModel.listarModelos();
+      const modelos = await QuestionarioModel.buscarTodos();
       res.json(modelos);
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
   }
 
-  async buscarModeloPorId(req, res) {
+  async buscarPorId(req, res) {
     const { id } = req.params;
     try {
-      const modelo = await QuestionarioModel.buscarModeloPorId(id);
+      const modelo = await QuestionarioModel.buscarPorId(id);
       if (!modelo) {
         return res.status(404).json({ error: "Modelo não encontrado" });
       }
@@ -23,28 +23,28 @@ class QuestionarioController {
     }
   }
 
-  async listarPerguntasModelo(req, res) {
+  async buscarPerguntas(req, res) {
     const { id } = req.params;
     try {
-      const perguntas = await QuestionarioModel.listarPerguntasModelo(id);
+      const perguntas = await QuestionarioModel.buscarPerguntas(id);
       res.json(perguntas);
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
   }
 
-  async substituirPerguntasModelo(req, res) {
+  async substituirPerguntas(req, res) {
     const { id } = req.params;
-    const { perguntas } = req.body; // expect [{ id_pergunta, ordem }, ...]
+    const { perguntas } = req.body;
     try {
-      await QuestionarioModel.substituirPerguntasModelo(id, perguntas);
+      await QuestionarioModel.substituirPerguntas(id, perguntas);
       res.json({ message: "Perguntas do modelo atualizadas com sucesso" });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
   }
 
-  async criarModelo(req, res) {
+  async criar(req, res) {
     const data = req.body;
 
     const validationErrors = {};
@@ -81,7 +81,7 @@ class QuestionarioController {
     }
 
     try {
-      const id = await QuestionarioModel.criarModelo(data);
+      const id = await QuestionarioModel.criar(data);
       res.status(201).json({ id, ...data });
     } catch (error) {
       if (error.message === "MODELO_DUPLICADO") {
@@ -100,7 +100,7 @@ class QuestionarioController {
     }
   }
 
-  async atualizarModelo(req, res) {
+  async atualizar(req, res) {
     const { id } = req.params;
     const data = req.body;
     const validationErrors = {};
@@ -136,28 +136,26 @@ class QuestionarioController {
       return res.status(400).json({ validationErrors });
     }
     try {
-      await QuestionarioModel.atualizarModelo(id, data);
+      await QuestionarioModel.atualizar(id, data);
       res.json({ message: "Modelo atualizado com sucesso" });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
   }
 
-  async deletarModelo(req, res) {
+  async deletar(req, res) {
     const { id } = req.params;
     try {
-      await QuestionarioModel.deletarModelo(id);
+      await QuestionarioModel.deletar(id);
       res.json({ message: "Modelo deletado com sucesso" });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
   }
 
-  async buscarModelosPorQuery(req, res) {
-    console.log("Entrou em buscarModelosPorQuery");
+  async buscarPorFiltros(req, res) {
     try {
       const { termo } = req.query;
-      console.log(termo);
 
       if (!termo || termo.trim() === "") {
         return res
@@ -165,9 +163,7 @@ class QuestionarioController {
           .json({ erro: "O parâmetro termo é obrigatório." });
       }
 
-      const resultados = await QuestionarioModel.buscarQuestionariosPorQuery(
-        termo
-      );
+      const resultados = await QuestionarioModel.buscarPorFiltros(termo);
 
       res.json(resultados);
     } catch (erro) {

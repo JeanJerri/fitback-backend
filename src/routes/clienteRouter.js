@@ -1,25 +1,25 @@
-const { Router } = require('express');
+const { Router } = require("express");
 const router = Router();
-const clienteController = require('../controllers/clienteController');
+const clienteController = require("../controllers/clienteController");
 
 // Rotas do CRUD de Clientes
 
 // GET - Listar todos os clientes
-router.get('/', clienteController.buscarTodos);
+router.get("/", clienteController.buscarTodos);
 
 // GET - Buscar um cliente por ID
-router.get('/:id', clienteController.buscarPorId);
+router.get("/:id", clienteController.buscarPorId);
 
 // POST - Criar um novo cliente
-router.post('/', clienteController.criar);
+router.post("/", clienteController.criar);
 
 // PUT - Atualizar um cliente
-router.put('/:id', clienteController.atualizar);
+router.put("/:id", clienteController.atualizar);
 
 // DELETE - Deletar um cliente
-router.delete('/:id', clienteController.apagar);
+router.delete("/:id", clienteController.deletar);
 
 // GET - Buscar cliente por nome ou CPF
-router.get('/buscar/:termo', clienteController.buscarClientePorNomeOuCpf);
+router.get("/buscar/:termo", clienteController.buscarPorFiltros);
 
-module.exports = router;	
+module.exports = router;

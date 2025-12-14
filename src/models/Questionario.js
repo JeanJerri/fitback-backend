@@ -2,7 +2,7 @@ const db = require("../config/db");
 const { buscarPerguntasPeloModelo } = require("./Pergunta");
 
 class QuestionarioModel {
-  async listarModelos() {
+  async buscarTodos() {
     const sqlModelo = "SELECT * FROM questionario_modelo";
     const [rows] = await db.query(sqlModelo);
     for (const modelo of rows) {
@@ -12,7 +12,7 @@ class QuestionarioModel {
     return rows;
   }
 
-  async buscarModeloPorId(id) {
+  async buscarPorId(id) {
     const sqlModelo = "SELECT * FROM questionario_modelo WHERE id_modelo = ?";
     const [rows] = await db.query(sqlModelo, [id]);
 
@@ -28,7 +28,7 @@ class QuestionarioModel {
     };
   }
 
-  async criarModelo(data) {
+  async criar(data) {
     const conn = await db.getConnection();
 
     try {
@@ -90,7 +90,7 @@ class QuestionarioModel {
     }
   }
 
-  async atualizarModelo(idModelo, data) {
+  async atualizar(idModelo, data) {
     const conn = await db.getConnection();
 
     try {
@@ -175,12 +175,12 @@ class QuestionarioModel {
     }
   }
 
-  async deletarModelo(id) {
+  async deletar(id) {
     const sql = "DELETE FROM questionario_modelo WHERE id_modelo = ?";
     await db.query(sql, [id]);
   }
 
-  async listarPerguntasModelo(id_modelo) {
+  async buscarPerguntas(id_modelo) {
     const sql = `SELECT p.id_pergunta, p.conteudo, p.tipo, p.id_categoria, mp.ordem
                  FROM modelo_pergunta mp
                  JOIN pergunta p ON mp.id_pergunta = p.id_pergunta
@@ -190,14 +190,11 @@ class QuestionarioModel {
     return rows;
   }
 
-  // substitui a lista de perguntas de um modelo (transacional)
-  async substituirPerguntasModelo(id_modelo, perguntas) {
-    // perguntas: array de { id_pergunta, ordem }
+  async substituirPerguntas(id_modelo, perguntas) {
     const conn = await db.getConnection();
     try {
       await conn.beginTransaction();
 
-      // remover existentes
       await conn.query("DELETE FROM modelo_pergunta WHERE id_modelo = ?", [
         id_modelo,
       ]);
@@ -222,7 +219,7 @@ class QuestionarioModel {
     }
   }
 
-  async buscarQuestionariosPorQuery(query) {
+  async buscarPorFiltros(query) {
     const termo = `%${query}%`;
 
     const sql = `

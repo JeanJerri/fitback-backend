@@ -5,21 +5,21 @@ const perguntaController = require("../controllers/perguntaController");
 // Rotas do CRUD de Perguntas
 
 // GET - Listar perguntas com filtros
-router.get("/buscar", perguntaController.buscarPerguntaPorQuery);
+router.get("/buscar", perguntaController.buscarPorFiltros);
 
 // GET - Listar todas as perguntas
-router.get("/", perguntaController.listarPerguntas);
+router.get("/", perguntaController.buscarTodos);
 
 // GET - Buscar uma pergunta por ID
-router.get("/:id", perguntaController.buscarPerguntaPorId);
+router.get("/:id", perguntaController.buscarPorId);
 
 // POST - Criar uma nova pergunta
-router.post("/", perguntaController.criarPergunta);
+router.post("/", perguntaController.criar);
 
 // PUT - Atualizar uma pergunta
-router.put("/:id", perguntaController.atualizarPergunta);
+router.put("/:id", perguntaController.atualizar);
 
 // DELETE - Deletar uma pergunta
-router.delete("/:id", perguntaController.deletarPergunta);
+router.delete("/:id", perguntaController.deletar);
 
 module.exports = router;

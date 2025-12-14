@@ -1,7 +1,7 @@
-const conexao = require("../config/db");
+const db = require("../config/db");
 
 class PerguntaModel {
-  async listarPerguntas() {
+  async buscarTodos() {
     const sqlPerguntas = `
       SELECT 
         p.*, 
@@ -10,7 +10,7 @@ class PerguntaModel {
       JOIN categoria c ON c.id_categoria = p.id_categoria
     `;
 
-    const [perguntas] = await conexao.query(sqlPerguntas);
+    const [perguntas] = await db.query(sqlPerguntas);
 
     const sqlOpcoes = "SELECT * FROM opcao_pergunta WHERE id_pergunta = ?";
 
@@ -18,7 +18,7 @@ class PerguntaModel {
       pergunta.obrigatoria = Boolean(pergunta.obrigatoria);
       pergunta.permite_multiplas = Boolean(pergunta.permite_multiplas);
 
-      const [opcoes] = await conexao.query(sqlOpcoes, [pergunta.id_pergunta]);
+      const [opcoes] = await db.query(sqlOpcoes, [pergunta.id_pergunta]);
 
       opcoes.forEach((op) => {
         if ("correta" in op) op.correta = Boolean(op.correta);
@@ -29,14 +29,14 @@ class PerguntaModel {
     return perguntas;
   }
 
-  async buscarPerguntaPorId(id) {
+  async buscarPorId(id) {
     const sql = "SELECT * FROM pergunta WHERE id_pergunta = ?";
-    const [rows] = await conexao.query(sql, [id]);
+    const [rows] = await db.query(sql, [id]);
     return rows[0];
   }
 
-  async criarPergunta(data) {
-    const [existe] = await conexao.query(
+  async criar(data) {
+    const [existe] = await db.query(
       `SELECT id_pergunta FROM pergunta 
      WHERE conteudo = ? AND id_categoria = ?`,
       [data.conteudo, data.id_categoria]
@@ -54,7 +54,7 @@ class PerguntaModel {
     VALUES (?, ?, ?, ?, ?, ?)
   `;
 
-    const [result] = await conexao.query(sqlPergunta, [
+    const [result] = await db.query(sqlPergunta, [
       data.id_categoria,
       data.tipo,
       data.ordem_exibicao,
@@ -72,7 +72,7 @@ class PerguntaModel {
     `;
 
       for (const opcao of data.opcoes) {
-        await conexao.query(sqlOpcao, [
+        await db.query(sqlOpcao, [
           idPergunta,
           opcao.texto,
           data.opcoes.indexOf(opcao),
@@ -85,8 +85,8 @@ class PerguntaModel {
     return idPergunta;
   }
 
-  async atualizarPergunta(id, data) {
-    const [existe] = await conexao.query(
+  async atualizar(id, data) {
+    const [existe] = await db.query(
       `SELECT id_pergunta FROM pergunta 
      WHERE conteudo = ? AND id_categoria = ? AND id_pergunta <> ?`,
       [data.conteudo, data.id_categoria, id]
@@ -101,7 +101,7 @@ class PerguntaModel {
     const sql =
       "UPDATE pergunta SET id_categoria = ?, tipo = ?, ordem_exibicao = ?, conteudo = ?, permite_multiplas = ?, obrigatoria = ? WHERE id_pergunta = ?";
 
-    await conexao.query(sql, [
+    await db.query(sql, [
       data.id_categoria,
       data.tipo,
       data.ordem_exibicao,
@@ -112,13 +112,11 @@ class PerguntaModel {
     ]);
 
     if (data.tipo !== "multipla_escolha") {
-      await conexao.query("DELETE FROM opcao_pergunta WHERE id_pergunta = ?", [
-        id,
-      ]);
+      await db.query("DELETE FROM opcao_pergunta WHERE id_pergunta = ?", [id]);
       return;
     }
 
-    const [opcoesAtuais] = await conexao.query(
+    const [opcoesAtuais] = await db.query(
       "SELECT id_opcao FROM opcao_pergunta WHERE id_pergunta = ?",
       [id]
     );
@@ -133,7 +131,7 @@ class PerguntaModel {
     );
 
     if (idsParaRemover.length > 0) {
-      await conexao.query(
+      await db.query(
         `DELETE FROM opcao_pergunta WHERE id_opcao IN (${idsParaRemover.join(
           ","
         )})`
@@ -142,12 +140,12 @@ class PerguntaModel {
 
     for (const opc of data.opcoes) {
       if (opc.id_opcao) {
-        await conexao.query(
+        await db.query(
           "UPDATE opcao_pergunta SET texto = ? WHERE id_opcao = ?",
           [opc.texto, opc.id_opcao]
         );
       } else {
-        await conexao.query(
+        await db.query(
           "INSERT INTO opcao_pergunta (id_pergunta, texto) VALUES (?, ?)",
           [id, opc.texto]
         );
@@ -155,15 +153,13 @@ class PerguntaModel {
     }
   }
 
-  async deletarPergunta(id) {
-    await conexao.query("DELETE FROM opcao_pergunta WHERE id_pergunta = ?", [
-      id,
-    ]);
+  async deletar(id) {
+    await db.query("DELETE FROM opcao_pergunta WHERE id_pergunta = ?", [id]);
 
-    await conexao.query("DELETE FROM pergunta WHERE id_pergunta = ?", [id]);
+    await db.query("DELETE FROM pergunta WHERE id_pergunta = ?", [id]);
   }
 
-  async buscarPerguntasPeloModelo(idModelo) {
+  async buscarPeloModelo(idModelo) {
     const sql = `
     SELECT 
       p.*,
@@ -177,11 +173,11 @@ class PerguntaModel {
     ORDER BY mp.ordem ASC
   `;
 
-    const [rows] = await conexao.query(sql, [idModelo]);
+    const [rows] = await db.query(sql, [idModelo]);
     return rows;
   }
 
-  async listarPorFiltros({ termo, idCategoria, tipo } = {}) {
+  async buscarPorFiltros({ termo, idCategoria, tipo } = {}) {
     let sql = `SELECT p.*, c.nome as categoria
                FROM pergunta p
                JOIN categoria c ON p.id_categoria = c.id_categoria`;
@@ -208,7 +204,7 @@ class PerguntaModel {
 
     sql += " ORDER BY p.ordem_exibicao, p.id_pergunta";
 
-    const [rows] = await conexao.query(sql, params);
+    const [rows] = await db.query(sql, params);
     return rows;
   }
 }

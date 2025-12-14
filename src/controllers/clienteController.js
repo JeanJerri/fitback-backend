@@ -1,4 +1,3 @@
-// src/controllers/clienteController.js
 const { isValidEmail } = require("../utils/validateEmail.js");
 const { isValidPassword } = require("../utils/validatePassword.js");
 const { isValidCPF } = require("../utils/validateCPF.js");
@@ -6,10 +5,10 @@ const { isValidPhone } = require("../utils/validatePhone.js");
 const { formatDate } = require("../utils/formatDate.js");
 const ClienteModel = require("../models/Cliente");
 
-class Cliente {
+class ClienteController {
   async buscarTodos(req, res) {
     try {
-      const clientes = await ClienteModel.getAll();
+      const clientes = await ClienteModel.buscarTodos();
 
       clientes.forEach((cliente) => {
         cliente.data_cadastro = formatDate(cliente.data_cadastro);
@@ -24,7 +23,7 @@ class Cliente {
   async buscarPorId(req, res) {
     const { id } = req.params;
     try {
-      const cliente = await ClienteModel.getById(id);
+      const cliente = await ClienteModel.buscarPorId(id);
 
       cliente.data_cadastro = formatDate(cliente.data_cadastro);
       cliente.data_desistencia = formatDate(cliente.data_desistencia);
@@ -73,7 +72,7 @@ class Cliente {
     }
 
     try {
-      const id = await ClienteModel.create(novoCliente);
+      const id = await ClienteModel.criar(novoCliente);
       res.status(201).json({ id_cliente: id, ...novoCliente });
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -124,10 +123,10 @@ class Cliente {
     }
   }
 
-  async apagar(req, res) {
+  async deletar(req, res) {
     const { id } = req.params;
     try {
-      const resultado = await ClienteModel.del(id);
+      const resultado = await ClienteModel.deletar(id);
       if (resultado.affectedRows > 0) {
         res.json({ message: "Cliente deletado com sucesso" });
       } else {
@@ -138,10 +137,10 @@ class Cliente {
     }
   }
 
-  async buscarClientePorNomeOuCpf(req, res) {
+  async buscarPorFiltros(req, res) {
     const { termo } = req.params;
     try {
-      const clientes = await ClienteModel.getByNameOrCpf(termo);
+      const clientes = await ClienteModel.buscarPorFiltros(termo);
       res.json(clientes);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -149,4 +148,4 @@ class Cliente {
   }
 }
 
-module.exports = new Cliente();
+module.exports = new ClienteController();

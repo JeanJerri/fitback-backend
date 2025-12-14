@@ -1,10 +1,8 @@
-
-const conexao = require('../config/db')
+const db = require("../config/db");
 class CategoriaModel {
-
-  async listarCategorias() {
+  async buscarTodos() {
     const sql = "SELECT * FROM categoria";
-    const [rows] = await conexao.query(sql);
+    const [rows] = await db.query(sql);
     return rows;
   }
 }

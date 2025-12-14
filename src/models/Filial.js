@@ -1,20 +1,20 @@
-const conexao = require("../config/db");
+const db = require("../config/db");
 
 class FilialModel {
-  async listarFiliais() {
+  async buscarTodos() {
     const sql = "SELECT * FROM filial";
-    const [rows] = await conexao.query(sql);
+    const [rows] = await db.query(sql);
     return rows;
   }
 
-  async buscarFilialPorId(id) {
+  async buscarPorId(id) {
     const sql = "SELECT * FROM filial WHERE id_filial = ?";
-    const [rows] = await conexao.query(sql, [id]);
+    const [rows] = await db.query(sql, [id]);
     return rows[0];
   }
 
-  async criarFilial(data) {
-    const conn = await conexao.getConnection();
+  async criar(data) {
+    const conn = await db.getConnection();
     try {
       await conn.beginTransaction();
 
@@ -66,8 +66,8 @@ class FilialModel {
     }
   }
 
-  async atualizarFilial(id, data) {
-    const conn = await conexao.getConnection();
+  async atualizar(id, data) {
+    const conn = await db.getConnection();
     try {
       await conn.beginTransaction();
 
@@ -122,13 +122,12 @@ class FilialModel {
     }
   }
 
-  async deletarFilial(id) {
+  async deletar(id) {
     const sql = "DELETE FROM filial WHERE id_filial = ?";
-    await conexao.query(sql, [id]);
+    await db.query(sql, [id]);
   }
 
-  async buscarFilialPorFiltros({ termo } = {}) {
-    console.log(termo);
+  async buscarPorFiltros({ termo } = {}) {
     let sql = `SELECT * FROM filial`;
 
     const conditions = [];
@@ -145,7 +144,7 @@ class FilialModel {
 
     sql += " ORDER BY nome, endereco";
 
-    const [rows] = await conexao.query(sql, params);
+    const [rows] = await db.query(sql, params);
     return rows;
   }
 }

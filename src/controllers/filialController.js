@@ -1,10 +1,10 @@
 const FilialModel = require("../models/Filial");
 
 class FilialController {
-  async buscarFilialPorQuery(req, res) {
+  async buscarPorFiltros(req, res) {
     try {
       const { termo } = req.query;
-      const filiais = await FilialModel.buscarFilialPorFiltros({
+      const filiais = await FilialModel.buscarPorFiltros({
         termo,
       });
       res.json(filiais);
@@ -13,19 +13,19 @@ class FilialController {
     }
   }
 
-  async listarFiliais(req, res) {
+  async buscarTodos(req, res) {
     try {
-      const filiais = await FilialModel.listarFiliais();
+      const filiais = await FilialModel.buscarTodos();
       res.json(filiais);
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
   }
 
-  async buscarFilialPorId(req, res) {
+  async buscarPorId(req, res) {
     const { id } = req.params;
     try {
-      const filial = await FilialModel.buscarFilialPorId(id);
+      const filial = await FilialModel.buscarPorId(id);
       if (!filial) {
         return res.status(404).json({ error: "Filial não encontrada" });
       }
@@ -35,7 +35,7 @@ class FilialController {
     }
   }
 
-  async criarFilial(req, res) {
+  async criar(req, res) {
     const novaFilial = req.body;
 
     const validationErrors = {};
@@ -53,14 +53,14 @@ class FilialController {
     }
 
     try {
-      const id = await FilialModel.criarFilial(novaFilial);
+      const id = await FilialModel.criar(novaFilial);
       res.status(201).json({ id, ...novaFilial });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
   }
 
-  async atualizarFilial(req, res) {
+  async atualizar(req, res) {
     const { id } = req.params;
     const filialAtualizada = req.body;
 
@@ -78,19 +78,18 @@ class FilialController {
       return res.status(400).json({ validationErrors });
     }
 
-
     try {
-      await FilialModel.atualizarFilial(id, filialAtualizada);
+      await FilialModel.atualizar(id, filialAtualizada);
       res.json({ message: "Filial atualizada com sucesso" });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
   }
 
-  async deletarFilial(req, res) {
+  async deletar(req, res) {
     const { id } = req.params;
     try {
-      await FilialModel.deletarFilial(id);
+      await FilialModel.deletar(id);
       res.json({ message: "Filial deletada com sucesso" });
     } catch (error) {
       res.status(500).json({ error: error.message });
