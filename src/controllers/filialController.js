@@ -36,10 +36,25 @@ class FilialController {
   }
 
   async criarFilial(req, res) {
-    const data = req.body;
+    const novaFilial = req.body;
+
+    const validationErrors = {};
+
+    if (!novaFilial.nome || novaFilial.nome.trim() === "") {
+      validationErrors.nome = "Nome é obrigatório";
+    }
+
+    if (!novaFilial.endereco || novaFilial.endereco.trim() === "") {
+      validationErrors.endereco = "Endereço é obrigatório";
+    }
+
+    if (Object.keys(validationErrors).length > 0) {
+      return res.status(400).json({ validationErrors });
+    }
+
     try {
-      const id = await FilialModel.criarFilial(data);
-      res.status(201).json({ id, ...data });
+      const id = await FilialModel.criarFilial(novaFilial);
+      res.status(201).json({ id, ...novaFilial });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
@@ -47,9 +62,25 @@ class FilialController {
 
   async atualizarFilial(req, res) {
     const { id } = req.params;
-    const data = req.body;
+    const filialAtualizada = req.body;
+
+    const validationErrors = {};
+
+    if (!filialAtualizada.nome || filialAtualizada.nome.trim() === "") {
+      validationErrors.nome = "Nome é obrigatório";
+    }
+
+    if (!filialAtualizada.endereco || filialAtualizada.endereco.trim() === "") {
+      validationErrors.endereco = "Endereço é obrigatório";
+    }
+
+    if (Object.keys(validationErrors).length > 0) {
+      return res.status(400).json({ validationErrors });
+    }
+
+
     try {
-      await FilialModel.atualizarFilial(id, data);
+      await FilialModel.atualizarFilial(id, filialAtualizada);
       res.json({ message: "Filial atualizada com sucesso" });
     } catch (error) {
       res.status(500).json({ error: error.message });
