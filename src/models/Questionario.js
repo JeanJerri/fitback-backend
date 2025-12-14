@@ -1,8 +1,5 @@
 const db = require("../config/db");
-const {
-  buscarPerguntaPorId,
-  buscarPerguntasPeloModelo,
-} = require("./Pergunta");
+const { buscarPerguntasPeloModelo } = require("./Pergunta");
 
 class QuestionarioModel {
   async listarModelos() {
@@ -17,53 +14,165 @@ class QuestionarioModel {
 
   async buscarModeloPorId(id) {
     const sqlModelo = "SELECT * FROM questionario_modelo WHERE id_modelo = ?";
-    const sqlPerguntas = buscarPerguntasPeloModelo(id);
     const [rows] = await db.query(sqlModelo, [id]);
-    const perguntas = await sqlPerguntas;
-    return { ...rows[0], perguntas };
+
+    if (rows.length === 0) {
+      return null;
+    }
+
+    const perguntas = await buscarPerguntasPeloModelo(id);
+
+    return {
+      ...rows[0],
+      perguntas,
+    };
   }
 
   async criarModelo(data) {
-    const sqlModelo =
-      "INSERT INTO questionario_modelo (nome, descricao, criado_por) VALUES (?, ?, ?)";
-    const [result] = await db.query(sqlModelo, [
-      data.nome,
-      data.descricao,
-      data.criado_por,
-    ]);
-    const questionarioId = result.insertId;
+    const conn = await db.getConnection();
 
-    for (const [index, id] of data?.perguntasIds.entries()) {
-      const pergunta = await buscarPerguntaPorId(id);
-      if (pergunta) {
-        const sqlAssociarPergunta =
-          "INSERT INTO modelo_pergunta (id_modelo, id_pergunta, ordem) VALUES (?, ?, ?)";
-        await db.query(sqlAssociarPergunta, [questionarioId, id, index]);
+    try {
+      await conn.beginTransaction();
+
+      const [nomeExistente] = await conn.query(
+        "SELECT id_modelo FROM questionario_modelo WHERE nome = ?",
+        [data.nome]
+      );
+
+      if (nomeExistente.length > 0) {
+        throw new Error("MODELO_DUPLICADO");
       }
-    }
 
-    return questionarioId;
+      const perguntasIdsUnicos = [...new Set(data.perguntasIds)];
+
+      const [perguntasValidas] = await conn.query(
+        `SELECT id_pergunta FROM pergunta WHERE id_pergunta IN (?)`,
+        [perguntasIdsUnicos]
+      );
+
+      if (perguntasValidas.length !== perguntasIdsUnicos.length) {
+        throw new Error("PERGUNTA_INVALIDA");
+      }
+
+      const sqlModelo = `
+      INSERT INTO questionario_modelo (nome, descricao, criado_por)
+      VALUES (?, ?, ?)
+    `;
+
+      const [result] = await conn.query(sqlModelo, [
+        data.nome,
+        data.descricao,
+        data.criado_por || null,
+      ]);
+
+      const questionarioId = result.insertId;
+
+      const sqlAssociarPergunta = `
+      INSERT INTO modelo_pergunta (id_modelo, id_pergunta, ordem)
+      VALUES (?, ?, ?)
+    `;
+
+      for (let i = 0; i < perguntasIdsUnicos.length; i++) {
+        await conn.query(sqlAssociarPergunta, [
+          questionarioId,
+          perguntasIdsUnicos[i],
+          i,
+        ]);
+      }
+
+      await conn.commit();
+      return questionarioId;
+    } catch (error) {
+      await conn.rollback();
+      throw error;
+    } finally {
+      conn.release();
+    }
   }
 
-  async atualizarModelo(id, data) {
-    const sqlModelo =
-      "UPDATE questionario_modelo SET nome = ?, descricao = ? WHERE id_modelo = ?";
-    if (data.perguntasIds.length > 0) {
-      const perguntasAtuais = await buscarPerguntasPeloModelo(id);
-      const perguntasAtuaisIds = perguntasAtuais.map((p) => p.id_pergunta);
+  async atualizarModelo(idModelo, data) {
+    const conn = await db.getConnection();
 
-      for (const [index, idPergunta] of data.perguntasIds.entries()) {
-        if (!perguntasAtuaisIds.includes(idPergunta)) {
-          const sqlInserirPergunta =
-            "INSERT INTO modelo_pergunta (id_modelo, id_pergunta, ordem) VALUES (?, ?, ?)";
-          await db.query(sqlInserirPergunta, [id, idPergunta, index]);
+    try {
+      await conn.beginTransaction();
+
+      const [modeloRows] = await conn.query(
+        "SELECT id_modelo FROM questionario_modelo WHERE id_modelo = ?",
+        [idModelo]
+      );
+
+      if (modeloRows.length === 0) {
+        throw new Error("Modelo de questionário não encontrado.");
+      }
+
+      if (data.nome) {
+        const [nomeRows] = await conn.query(
+          `
+        SELECT id_modelo 
+        FROM questionario_modelo 
+        WHERE nome = ? AND id_modelo != ?
+        `,
+          [data.nome, idModelo]
+        );
+
+        if (nomeRows.length > 0) {
+          throw new Error("Já existe um questionário com esse nome.");
         }
       }
-      const sqlPerguntasDelete =
-        "DELETE FROM modelo_pergunta WHERE id_modelo = ? AND id_pergunta NOT IN (?)";
-      await db.query(sqlPerguntasDelete, [id, perguntasAtuaisIds]);
+
+      if (Array.isArray(data.perguntasIds)) {
+        if (data.perguntasIds.length === 0) {
+          throw new Error("O questionário deve possuir ao menos uma pergunta.");
+        }
+
+        const uniqueIds = new Set(data.perguntasIds);
+        if (uniqueIds.size !== data.perguntasIds.length) {
+          throw new Error("A lista de perguntas contém IDs duplicados.");
+        }
+
+        const [perguntasValidas] = await conn.query(
+          `
+        SELECT id_pergunta 
+        FROM pergunta 
+        WHERE id_pergunta IN (?)
+        `,
+          [data.perguntasIds]
+        );
+
+        if (perguntasValidas.length !== data.perguntasIds.length) {
+          throw new Error("Uma ou mais perguntas informadas não existem.");
+        }
+
+        for (let i = 0; i < data.perguntasIds.length; i++) {
+          await conn.query(
+            `
+          UPDATE modelo_pergunta
+          SET ordem = ?
+          WHERE id_modelo = ? AND id_pergunta = ?
+          `,
+            [i, idModelo, data.perguntasIds[i]]
+          );
+        }
+      }
+
+      await conn.query(
+        `
+      UPDATE questionario_modelo
+      SET nome = ?, descricao = ?
+      WHERE id_modelo = ?
+      `,
+        [data.nome, data.descricao, idModelo]
+      );
+
+      await conn.commit();
+      return true;
+    } catch (error) {
+      await conn.rollback();
+      console.error("Erro ao atualizar modelo:", error);
+      throw error;
+    } finally {
+      conn.release();
     }
-    await db.query(sqlModelo, [data.nome, data.descricao, id]);
   }
 
   async deletarModelo(id) {
@@ -71,7 +180,6 @@ class QuestionarioModel {
     await db.query(sql, [id]);
   }
 
-  // retorna perguntas associadas a um modelo com a ordem definida em modelo_pergunta
   async listarPerguntasModelo(id_modelo) {
     const sql = `SELECT p.id_pergunta, p.conteudo, p.tipo, p.id_categoria, mp.ordem
                  FROM modelo_pergunta mp
@@ -128,6 +236,31 @@ class QuestionarioModel {
 
     const [rows] = await db.query(sql, [termo, termo, termo]);
     return rows;
+  }
+
+  async atualizarOrdemPerguntas(idModelo, perguntasIds) {
+    const conn = await db.getConnection();
+
+    try {
+      await conn.beginTransaction();
+      for (let i = 0; i < perguntasIds.length; i++) {
+        await conn.query(
+          `
+        UPDATE modelo_pergunta
+        SET ordem = ?
+        WHERE id_modelo = ? AND id_pergunta = ?
+        `,
+          [i, idModelo, perguntasIds[i]]
+        );
+      }
+
+      await conn.commit();
+    } catch (error) {
+      await conn.rollback();
+      throw error;
+    } finally {
+      conn.release();
+    }
   }
 }
 

@@ -46,10 +46,56 @@ class QuestionarioController {
 
   async criarModelo(req, res) {
     const data = req.body;
+
+    const validationErrors = {};
+
+    if (!data.nome || data.nome.trim() === "") {
+      validationErrors.nome = "Título do questionário é obrigatório";
+    } else if (data.nome.length < 3 || data.nome.length > 100) {
+      validationErrors.nome = "Título deve ter entre 3 e 100 caracteres";
+    }
+
+    if (!data.descricao || data.descricao.trim() === "") {
+      validationErrors.descricao = "Descrição é obrigatória";
+    } else if (data.descricao.length < 10 || data.descricao.length > 255) {
+      validationErrors.descricao =
+        "Descrição deve ter entre 10 e 255 caracteres";
+    }
+
+    if (!Array.isArray(data.perguntasIds)) {
+      validationErrors.perguntasIds = "perguntasIds deve ser um array";
+    } else if (data.perguntasIds.length === 0) {
+      validationErrors.perguntasIds = "Selecione ao menos uma pergunta";
+    } else {
+      const idsInvalidos = data.perguntasIds.some(
+        (id) => !Number.isInteger(id) || id <= 0
+      );
+      if (idsInvalidos) {
+        validationErrors.perguntasIds =
+          "perguntasIds deve conter apenas IDs válidos";
+      }
+    }
+
+    if (Object.keys(validationErrors).length > 0) {
+      return res.status(400).json({ validationErrors });
+    }
+
     try {
       const id = await QuestionarioModel.criarModelo(data);
       res.status(201).json({ id, ...data });
     } catch (error) {
+      if (error.message === "MODELO_DUPLICADO") {
+        return res
+          .status(409)
+          .json({ error: "Já existe um questionário com esse nome" });
+      }
+
+      if (error.message === "PERGUNTA_INVALIDA") {
+        return res
+          .status(400)
+          .json({ error: "Uma ou mais perguntas não existem" });
+      }
+
       res.status(500).json({ error: error.message });
     }
   }
@@ -57,6 +103,38 @@ class QuestionarioController {
   async atualizarModelo(req, res) {
     const { id } = req.params;
     const data = req.body;
+    const validationErrors = {};
+
+    if (!data.nome || data.nome.trim() === "") {
+      validationErrors.nome = "Título do questionário é obrigatório";
+    } else if (data.nome.length < 3 || data.nome.length > 100) {
+      validationErrors.nome = "Título deve ter entre 3 e 100 caracteres";
+    }
+
+    if (!data.descricao || data.descricao.trim() === "") {
+      validationErrors.descricao = "Descrição é obrigatória";
+    } else if (data.descricao.length < 10 || data.descricao.length > 255) {
+      validationErrors.descricao =
+        "Descrição deve ter entre 10 e 255 caracteres";
+    }
+
+    if (!Array.isArray(data.perguntasIds)) {
+      validationErrors.perguntasIds = "perguntasIds deve ser um array";
+    } else if (data.perguntasIds.length === 0) {
+      validationErrors.perguntasIds = "Selecione ao menos uma pergunta";
+    } else {
+      const idsInvalidos = data.perguntasIds.some(
+        (id) => !Number.isInteger(id) || id <= 0
+      );
+      if (idsInvalidos) {
+        validationErrors.perguntasIds =
+          "perguntasIds deve conter apenas IDs válidos";
+      }
+    }
+
+    if (Object.keys(validationErrors).length > 0) {
+      return res.status(400).json({ validationErrors });
+    }
     try {
       await QuestionarioModel.atualizarModelo(id, data);
       res.json({ message: "Modelo atualizado com sucesso" });
@@ -90,7 +168,7 @@ class QuestionarioController {
       const resultados = await QuestionarioModel.buscarQuestionariosPorQuery(
         termo
       );
-      
+
       res.json(resultados);
     } catch (erro) {
       console.error("Erro ao buscar questionários:", erro);
@@ -98,6 +176,20 @@ class QuestionarioController {
         .status(500)
         .json({ erro: "Erro interno ao buscar questionários." });
     }
+  }
+
+  async atualizarOrdemPerguntas(req, res) {
+    const { idModelo } = req.params;
+    const { perguntasIds } = req.body;
+
+    if (!Array.isArray(perguntasIds)) {
+      return res.status(400).json({
+        error: "perguntasIds deve ser um array",
+      });
+    }
+
+    await QuestionarioModel.atualizarOrdemPerguntas(idModelo, perguntasIds);
+    res.json({ message: "Ordem atualizada com sucesso" });
   }
 }
 

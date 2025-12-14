@@ -27,4 +27,9 @@ router.post("/:id/perguntas", questionarioController.substituirPerguntasModelo);
 // DELETE - Deletar um modelo de questionário
 router.delete("/:id", questionarioController.deletarModelo);
 
+router.put(
+  "/:id/ordem-perguntas",
+  questionarioController.atualizarOrdemPerguntas
+);
+
 module.exports = router;

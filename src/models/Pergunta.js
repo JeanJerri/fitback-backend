@@ -26,7 +26,6 @@ class PerguntaModel {
 
       pergunta.opcoes = opcoes;
     }
-
     return perguntas;
   }
 
@@ -165,14 +164,24 @@ class PerguntaModel {
   }
 
   async buscarPerguntasPeloModelo(idModelo) {
-    const sql =
-      "SELECT p.* FROM pergunta p JOIN modelo_pergunta mp ON p.id_pergunta = mp.id_pergunta WHERE mp.id_modelo = ? ORDER BY mp.ordem";
+    const sql = `
+    SELECT 
+      p.*,
+      c.nome AS nome_categoria
+    FROM pergunta p
+    JOIN modelo_pergunta mp 
+      ON p.id_pergunta = mp.id_pergunta
+    JOIN categoria c 
+      ON p.id_categoria = c.id_categoria
+    WHERE mp.id_modelo = ?
+    ORDER BY mp.ordem
+  `;
+
     const [rows] = await conexao.query(sql, [idModelo]);
     return rows;
   }
 
   async listarPorFiltros({ termo, idCategoria, tipo } = {}) {
-    console.log("Filtros recebidos no model:", { termo, idCategoria, tipo });
     let sql = `SELECT p.*, c.nome as categoria
                FROM pergunta p
                JOIN categoria c ON p.id_categoria = c.id_categoria`;
