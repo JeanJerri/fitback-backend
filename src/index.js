@@ -19,17 +19,3 @@ const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
-app.get("/api", (req, res) => {
-  res.json({
-    message: "Bem-vindo à API Fitback",
-    hint: "Os endpoints estão disponíveis sob /api/*",
-    example: [
-      "api/clientes",
-      "/api/perguntas",
-      "/api/categorias",
-      "/api/questionarios",
-      "/api/filiais",
-    ],
-  });
-});
