@@ -112,7 +112,7 @@ class ClienteController {
     }
 
     try {
-      await ClienteModel.update(id, data);
+      await ClienteModel.atualizar(id, data);
       res.json({ message: "Cliente atualizado com sucesso" });
     } catch (error) {
       if (error.message === "Cliente não encontrado") {
